@@ -1,0 +1,39 @@
+
+<% wrap_layout :inner do %>
+  <% content_for :sidebar do %>
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+      <ul class="nav docs-sidenav">
+        <li<%= sidebar_current("docs-home") %>>
+          <a href="/docs/providers/index.html">All Providers</a>
+        </li>
+
+        <li<%= sidebar_current("docs-victorops-index") %>>
+          <a href="/docs/providers/victorops/index.html">VictorOps Provider</a>
+        </li>
+
+        <li<%= sidebar_current("docs-victorops-resource") %>>
+          <a href="#">Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-victorops-user") %>>
+              <a href="/docs/providers/victorops/r/user.html">victorops_user</a>
+            </li>
+            <li<%= sidebar_current("docs-victorops-team") %>>
+              <a href="/docs/providers/victorops/r/team.html">victorops_team</a>
+            </li>
+            <li<%= sidebar_current("docs-victorops-routing-key") %>>
+              <a href="/docs/providers/victorops/r/routing_key.html">victorops_routing_key</a>
+            </li>
+            <li<%= sidebar_current("docs-victorops-team-membership") %>>
+              <a href="/docs/providers/victorops/r/team_membership.html">victorops_team_membership</a>
+            </li>
+            <li<%= sidebar_current("docs-victorops-contact-phone") %>>
+              <a href="/docs/providers/victorops/r/contact_phone.html">victorops_contact_phone</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= yield %>
+<% end %>
