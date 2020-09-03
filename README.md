@@ -17,16 +17,16 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/splunk/victorops-terraform-provider`
+Clone repository to: `$GOPATH/src/github.com/splunk/terraform-provider-victorops`
 
 ```sh
-$ git clone git@github.com:splunk/victorops-terraform-provider.git $GOPATH/src/github.com/splunk/victorops-terraform-provider
+$ git clone git@github.com:splunk/terraform-provider-victorops.git $GOPATH/src/github.com/splunk/terraform-provider-victorops
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/splunk/victorops-terraform-provider
+$ cd $GOPATH/src/github.com/splunk/terraform-provider-victorops
 
 # MacOC
 $ go build
