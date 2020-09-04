@@ -1,0 +1,8 @@
+# Ignore dist file
+.idea
+.terraform
+terraform-provider-victorops
+terraform.tfstate
+terraform.tfstate.backup
+*.log
+.DS_Store
