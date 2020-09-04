@@ -1,6 +1,6 @@
 ---
 layout: "victorops"
-page_title: "VictorOps: victorops_contact_phone"
+page_title: "VictorOps: victorops_team_membership"
 description: |-
   Manages a user's team association within victorops
 ---

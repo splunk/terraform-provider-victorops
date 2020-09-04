@@ -1,8 +1,8 @@
 ---
 layout: "victorops"
-page_title: "VictorOps: victorops_user"
+page_title: "VictorOps: victorops_team"
 description: |-
-  Creates and manages a user in VictorOps.
+  Creates and manages a team in VictorOps.
 ---
 
 # victorops\_team

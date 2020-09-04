@@ -1,11 +1,11 @@
 ---
 layout: "victorops"
-page_title: "VictorOps: victorops_user"
+page_title: "VictorOps: victorops_routing_key"
 description: |-
   Creates and manages a routing key in VictorOps
 ---
 
-# victorops\_user
+# victorops\_routing\_key
 
 A routing key in VictorOps is used to route incoming alerts to specific escalation policies.
 
