@@ -2,12 +2,20 @@
 layout: "victorops"
 page_title: "Provider: VictorOps"
 description: |-
-  VictorOps VictorOps incident management software gives DevOps observability, collaboration, & real-time alerting, to build, deploy, & operate software.
+  Empower teams by routing alerts to the right people for fast collaboration and issue resolution.
 ---
 
 # VictorOps Provider
 
-[VictorOps](https://www.victorops.com) is an alarm aggregation and dispatching service for system administrators and support teams. It collects alerts from your monitoring tools, gives you an overall view of all of your monitoring alarms, and alerts an on duty engineer if there’s a problem.
+[VictorOps](https://www.victorops.com) empowers teams by routing alerts to the right people for collaboration and fast issue resolution.
+
+Using this VictorOps Terraform provider, teams can automate VictorOps setup associated with an application.
+You can manage the following resources using this provider.
+1. User
+2. Team
+3. User-Team assignment
+4. Escalation Policy
+5. Routing Key
 
 Use the navigation to the left to read about the available resources.
 
