@@ -2,7 +2,7 @@
 layout: "victorops"
 page_title: "VictorOps: victorops_contact"
 description: |-
-  Creates and manages a contact phone in VictorOps.
+  Manage a user's contact methods in VictorOps.
 ---
 
 # victorops\_contact
@@ -37,7 +37,7 @@ The following arguments are supported:
 * `user_name` - (Required) The username of the user this phone number belongs to.
 * `value` - (Required) A phone number or email address that will be used for this contact.
 * `type`  - (Required) Either "phone" or "email" depending on the type of contact you are creating.
-* `label` - (Required) What label to give this contact.
+* `label` - (Required) What label to give this contact. Example: work
 
 ## Attributes Reference
 
