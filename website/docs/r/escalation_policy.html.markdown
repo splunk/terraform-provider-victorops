@@ -2,7 +2,7 @@
 layout: "victorops"
 page_title: "VictorOps: victorops_escalation_policy"
 description: |-
-  Creates and manages a user in VictorOps.
+  Manage Escaltion Policies in VictorOps.
 ---
 
 # victorops\_escalation\_policy
