@@ -38,12 +38,26 @@ $ cp $GOPATH/bin/terraform-provider-victorops .
 
 Features
 ------------
-Allow Victorops customers to create VictorOps teams, users, escalation policies and routing keys using terraform
+Using this VictorOps Terraform provider, you can manage the following VictorOps resources.
 
+1. User
+2. Team
+3. User-Team assignment
+4. Escalation Policy
+5. Routing Key
 
 Usage
 ------------
 ```
+terraform {
+	required_providers {
+		victorops = {
+			source = "splunk/victorops"
+			version = "0.0.6"
+		}
+	}
+}
+
 provider "victorops" {
   api_id  = "6d700de8"   // An API id tied to an admin user
   api_key = "<REDACTED>" // An API key tied to an admin user
