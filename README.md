@@ -53,7 +53,7 @@ terraform {
 	required_providers {
 		victorops = {
 			source = "splunk/victorops"
-			version = "0.0.6"
+			version = "0.1.1"
 		}
 	}
 }
