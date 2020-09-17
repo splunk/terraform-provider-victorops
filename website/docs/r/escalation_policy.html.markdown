@@ -2,7 +2,7 @@
 layout: "victorops"
 page_title: "VictorOps: victorops_escalation_policy"
 description: |-
-  Manage Escaltion Policies in VictorOps.
+  Manage Escalation Policies in VictorOps.
 ---
 
 # victorops\_escalation\_policy
