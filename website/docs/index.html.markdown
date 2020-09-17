@@ -23,7 +23,17 @@ Use the navigation to the left to read about the available resources.
 
 ```hcl
 # Intitialize the victorops provider
-provider "victorops" {
+
+terraform {
+	required_providers {
+		victorops = {
+			source = "splunk/victorops"
+			version = "0.1.1"
+			}
+		}
+	}
+  
+  provider "victorops" {
   api_id  = var.api_id
   api_key = var.api_key
 }
