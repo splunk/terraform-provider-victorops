@@ -29,9 +29,9 @@ terraform {
 		victorops = {
 			source = "splunk/victorops"
 			version = "0.1.1"
-			}
 		}
 	}
+}
   
   provider "victorops" {
   api_id  = var.api_id
