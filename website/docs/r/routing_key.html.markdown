@@ -7,7 +7,7 @@ description: |-
 
 # victorops\_routing\_key
 
-A routing key in VictorOps is used to route incoming alerts to specific escalation policies.
+A [routing key](https://portal.victorops.com/public/api-docs.html#!/Routing32Keys/get_api_public_v1_org_routing_keys) in VictorOps is used to route incoming alerts to specific escalation policies.
 
 ## Example Usage
 
@@ -22,7 +22,7 @@ resource "victorops_routing_key" "infrastructure_high_severity" {
 
 The following arguments are supported:
 
-* `name` - (Required) The first name of the user.
+* `name` - (Required) Routing key name.
 * `targets` - (Required) A list of escalation policy ids to route alerts to.
 
 ## Attributes Reference
