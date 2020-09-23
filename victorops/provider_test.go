@@ -1,9 +1,12 @@
 package victorops
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"html/template"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 
@@ -14,12 +17,42 @@ import (
 
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
+var tfTemplate *template.Template
 
 func init() {
+	tfTemplate = template.Must(tfTemplate.ParseGlob("../templates/*.tf"))
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"victorops_config_test": testAccProvider,
+		"victorops": testAccProvider,
 	}
+}
+
+func getTestTemplate(f string, d interface{}) string {
+	buf := &bytes.Buffer{}
+	err := tfTemplate.ExecuteTemplate(buf, f, d)
+	if err != nil {
+		log.Fatalln(err)
+		log.Fatalln("Could not find template file", f)
+	}
+	return buf.String()
+}
+
+
+func testAccPreCheck(t *testing.T) {
+	if v := os.Getenv("VO_API_ID"); v == "" {
+		t.Fatal("VO_API_ID must be set for acceptance tests")
+	}
+	if v := os.Getenv("VO_API_KEY"); v == "" {
+		t.Fatal("VO_API_KEY must be set for acceptance tests")
+	}
+	if v := os.Getenv("VO_BASE_URL"); v == "" {
+		t.Fatal("VO_BASE_URL must be set for acceptance tests")
+	}
+	if v := os.Getenv("VO_REPLACEMENT_USERNAME"); v == "" {
+		t.Fatal("VO_REPLACEMENT_USERNAME must be set for acceptance tests")
+	}
+
 }
 
 func createTempConfigFile(content string, name string) (*os.File, error) {
