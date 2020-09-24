@@ -17,4 +17,5 @@ resource "victorops_team" "test_team" {
 resource "victorops_team_membership" "test_membership" {
   team_id          = victorops_team.test_team.id
   user_name        = victorops_user.test_user.user_name
+  replacement_user = victorops_user.test_user.replacement_user
 }

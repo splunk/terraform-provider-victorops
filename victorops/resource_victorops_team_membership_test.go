@@ -1,6 +1,7 @@
 package victorops
 
 import (
+	"fmt"
 	"github.com/bxcodec/faker/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -18,7 +19,8 @@ type MembershipData struct {
 }
 
 func TestCreate_TeamMembership(t *testing.T) {
-	membership := createNewMembership()
+	tfMembershipResourceName := "victorops_team_membership.test_membership"
+	membership := createNewMembershipModel()
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -29,8 +31,8 @@ func TestCreate_TeamMembership(t *testing.T) {
 			{
 				Config: createMembershipResource(membership),
 				Check: resource.ComposeTestCheckFunc(
-					testAccTeamExists(tfResourceName),
-					resource.TestCheckResourceAttr(tfResourceName, "name", membership.TeamName),
+					testAccTeamMembershipExists(tfMembershipResourceName),
+					resource.TestCheckResourceAttr(tfMembershipResourceName, "user_name", membership.User.Username),
 				),
 			},
 		},
@@ -38,7 +40,7 @@ func TestCreate_TeamMembership(t *testing.T) {
 }
 
 
-func createNewMembership() MembershipData {
+func createNewMembershipModel() MembershipData {
 	replacementUser := os.Getenv("VO_REPLACEMENT_USERNAME")
 
 	return MembershipData{
@@ -56,6 +58,25 @@ func createNewMembership() MembershipData {
 
 func createMembershipResource(md MembershipData) string {
 	return getTestTemplate("test_memb.tf", md)
+}
+
+func testAccTeamMembershipExists(resource string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		rs, ok := state.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("not found: %s", resource)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no record ID is set")
+		}
+		teamSlug := rs.Primary.ID
+		apiClient := testAccProvider.Meta().(Config).VictorOpsClient
+		_, _, err := apiClient.GetTeam(teamSlug)
+		if err != nil {
+			return fmt.Errorf("error fetching item with resource %s. %s", resource, err)
+		}
+		return nil
+	}
 }
 
 func testMembershipDestroy(s *terraform.State) error {
