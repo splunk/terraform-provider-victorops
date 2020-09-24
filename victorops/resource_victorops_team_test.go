@@ -32,6 +32,7 @@ func TestTeam_Create(t *testing.T) {
 	})
 }
 
+
 func createTeamResource(s string) string {
 	return getTestTemplate("test_team.tf", s)
 }
