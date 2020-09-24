@@ -96,7 +96,7 @@ resource "victorops_escalation_policy" "high_severity" {
         slug = "rtg-wvvhXshpvaRdn7jM"
       }
     ]
-  }
+  } 
 }
 
 // Create routing keys to push alerts to our escalation policies

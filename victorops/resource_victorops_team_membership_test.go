@@ -57,7 +57,7 @@ func createNewMembershipModel() MembershipData {
 }
 
 func createMembershipResource(md MembershipData) string {
-	return getTestTemplate("test_memb.tf", md)
+	return getTestTemplate("test_membership.tf", md)
 }
 
 func testAccTeamMembershipExists(resource string) resource.TestCheckFunc {

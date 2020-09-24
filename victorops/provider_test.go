@@ -52,7 +52,9 @@ func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("VO_REPLACEMENT_USERNAME"); v == "" {
 		t.Fatal("VO_REPLACEMENT_USERNAME must be set for acceptance tests")
 	}
-
+	if v := os.Getenv("VO_ROTATION_GROUP_SLUG"); v == "" {
+		t.Fatal("VO_ROTATION_GROUP_SLUG must be set for acceptance tests")
+	}
 }
 
 func createTempConfigFile(content string, name string) (*os.File, error) {
