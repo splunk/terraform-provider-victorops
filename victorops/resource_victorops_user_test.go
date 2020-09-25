@@ -12,12 +12,6 @@ import (
 	"testing"
 )
 
-
-var replacementUsername string
-func init() {
-	replacementUsername = os.Getenv("VO_REPLACEMENT_USERNAME")
-}
-
 type UserData struct {
 	User victorops.User
 	Replacement string
@@ -25,11 +19,7 @@ type UserData struct {
 
 
 func TestUser_Create(t *testing.T) {
-
-	if replacementUsername == "" {
-		return
-	}
-
+	replacementUsername := os.Getenv("VO_REPLACEMENT_USERNAME")
 	voUsr := createNewUser()
 	tfResourceName := "victorops_user.test_user"
 	resource.Test(t, resource.TestCase{
@@ -57,10 +47,7 @@ func TestUser_Create(t *testing.T) {
 
 
 func TestUser_Update(t *testing.T) {
-	if replacementUsername == "" {
-		return
-	}
-
+	replacementUsername := os.Getenv("VO_REPLACEMENT_USERNAME")
 	createUser := createNewUser()
 	updateUser := updateUser(createUser)
 	tfResourceName := "victorops_user.test_user"

@@ -9,11 +9,9 @@ import (
 )
 
 
-var tfResourceName string = "victorops_team.test_team"
-
-
 func TestTeam_Create(t *testing.T) {
 	teamName := "DevOps"
+	tfResourceName := "victorops_team.test_team"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
