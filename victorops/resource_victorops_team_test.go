@@ -8,7 +8,6 @@ import (
 	"testing"
 )
 
-
 func TestTeam_Create(t *testing.T) {
 	teamName := "DevOps"
 	tfResourceName := "victorops_team.test_team"
@@ -29,7 +28,6 @@ func TestTeam_Create(t *testing.T) {
 		},
 	})
 }
-
 
 func createTeamResource(s string) string {
 	return getTestTemplate("test_team.tf", s)

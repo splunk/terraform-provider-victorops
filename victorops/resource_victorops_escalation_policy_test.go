@@ -14,7 +14,6 @@ type PolicyData struct {
 	RotationSlug string
 }
 
-
 // Cannot be executed until the unmarshalling is fixed
 // Error: json: cannot unmarshal array into Go value of type victorops.EscalationPolicy
 //func TestEscalationPolicy_Create(t *testing.T) {

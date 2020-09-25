@@ -24,7 +24,7 @@ func init() {
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"victorops_config_test": testAccProvider,
-		"victorops": testAccProvider,
+		"victorops":             testAccProvider,
 	}
 }
 
@@ -37,7 +37,6 @@ func getTestTemplate(f string, d interface{}) string {
 	}
 	return buf.String()
 }
-
 
 func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("VO_API_ID"); v == "" {

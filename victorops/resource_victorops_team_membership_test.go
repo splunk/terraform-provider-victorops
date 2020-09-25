@@ -11,10 +11,9 @@ import (
 	"testing"
 )
 
-
 type MembershipData struct {
-	User victorops.User
-	TeamName string
+	User        victorops.User
+	TeamName    string
 	Replacement string
 }
 
@@ -39,19 +38,18 @@ func TestCreate_TeamMembership(t *testing.T) {
 	})
 }
 
-
 func createNewMembershipModel() MembershipData {
 	replacementUser := os.Getenv("VO_REPLACEMENT_USERNAME")
 
 	return MembershipData{
 		User: victorops.User{
 			FirstName: faker.FirstName(),
-			LastName: faker.LastName(),
-			Username: strings.ToLower(faker.Username()),
-			Email: faker.Email(),
-			Admin: true,
+			LastName:  faker.LastName(),
+			Username:  strings.ToLower(faker.Username()),
+			Email:     faker.Email(),
+			Admin:     true,
 		},
-		TeamName: faker.Word(),
+		TeamName:    faker.Word(),
 		Replacement: replacementUser,
 	}
 }

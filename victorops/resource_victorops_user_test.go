@@ -13,10 +13,9 @@ import (
 )
 
 type UserData struct {
-	User victorops.User
+	User        victorops.User
 	Replacement string
 }
-
 
 func TestUser_Create(t *testing.T) {
 	replacementUsername := os.Getenv("VO_REPLACEMENT_USERNAME")
@@ -45,13 +44,12 @@ func TestUser_Create(t *testing.T) {
 	})
 }
 
-
 func TestUser_Update(t *testing.T) {
 	replacementUsername := os.Getenv("VO_REPLACEMENT_USERNAME")
 	createUser := createNewUser()
 	updateUser := updateUser(createUser)
 	tfResourceName := "victorops_user.test_user"
-	resource.Test(t, resource.TestCase {
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -89,10 +87,10 @@ func TestUser_Update(t *testing.T) {
 func createNewUser() victorops.User {
 	return victorops.User{
 		FirstName: faker.FirstName(),
-		LastName: faker.LastName(),
-		Username: strings.ToLower(faker.Username()),
-		Email: faker.Email(),
-		Admin: true,
+		LastName:  faker.LastName(),
+		Username:  strings.ToLower(faker.Username()),
+		Email:     faker.Email(),
+		Admin:     true,
 	}
 }
 
@@ -104,7 +102,7 @@ func updateUser(user victorops.User) victorops.User {
 
 func createUserResource(user victorops.User, replName string) string {
 	ud := UserData{
-		User: user,
+		User:        user,
 		Replacement: replName,
 	}
 	return getTestTemplate("test_user.tf", ud)

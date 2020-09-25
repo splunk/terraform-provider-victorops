@@ -35,7 +35,6 @@ type RoutingKeyData struct {
 //	})
 //}
 
-
 func createRouteKeyModel() RoutingKeyData {
 	rs := os.Getenv("VO_ROTATION_GROUP_SLUG")
 	return RoutingKeyData{
@@ -49,7 +48,6 @@ func createRouteKeyModel() RoutingKeyData {
 func createRoutKeyResource(rk RoutingKeyData) string {
 	return getTestTemplate("test_routing_key.tf", rk)
 }
-
 
 func testAccRouteKeyExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {

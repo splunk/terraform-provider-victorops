@@ -119,6 +119,17 @@ $ make test
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
 
+Acceptance tests require the following environment variables to be set.
+
+- VO_API_ID
+- VO_API_KEY
+- VO_BASE_URL
+-VO_REPLACEMENT_USERNAME
+    - the default username to replace all users when removed
+- VO_ROTATION_GROUP_SLUG
+    - the default rotation group slug to create escalation policies
+- TF_ACC=true
+
 ```sh
 $ make testacc
 ```
