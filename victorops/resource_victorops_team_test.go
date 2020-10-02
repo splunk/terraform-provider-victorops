@@ -8,7 +8,11 @@ import (
 	"testing"
 )
 
-func TestTeam_Create(t *testing.T) {
+func TestAccTeamCreate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	teamName := "DevOps"
 	tfResourceName := "victorops_team.test_team"
 	resource.Test(t, resource.TestCase{

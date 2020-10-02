@@ -16,5 +16,3 @@ func TestTypeToContactType(t *testing.T) {
 	assert.Equal(t, val1, call1)
 	assert.Equal(t, val2, call2)
 }
-
-// todo: Add acceptance tests

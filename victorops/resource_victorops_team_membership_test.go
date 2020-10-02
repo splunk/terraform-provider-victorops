@@ -17,7 +17,11 @@ type MembershipData struct {
 	Replacement string
 }
 
-func TestCreate_TeamMembership(t *testing.T) {
+func TestAccCreateTeamMembership(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	tfMembershipResourceName := "victorops_team_membership.test_membership"
 	membership := createNewMembershipModel()
 	resource.Test(t, resource.TestCase{

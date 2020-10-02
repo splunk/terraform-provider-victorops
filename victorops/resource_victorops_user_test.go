@@ -17,7 +17,11 @@ type UserData struct {
 	Replacement string
 }
 
-func TestUser_Create(t *testing.T) {
+func TestAccUserCreate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	replacementUsername := os.Getenv("VO_REPLACEMENT_USERNAME")
 	voUsr := createNewUser()
 	tfResourceName := "victorops_user.test_user"
@@ -44,7 +48,7 @@ func TestUser_Create(t *testing.T) {
 	})
 }
 
-func TestUser_Update(t *testing.T) {
+func testAccUser_Update(t *testing.T) {
 	replacementUsername := os.Getenv("VO_REPLACEMENT_USERNAME")
 	createUser := createNewUser()
 	updateUser := updateUser(createUser)

@@ -51,9 +51,6 @@ func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("VO_REPLACEMENT_USERNAME"); v == "" {
 		t.Fatal("VO_REPLACEMENT_USERNAME must be set for acceptance tests")
 	}
-	if v := os.Getenv("VO_ROTATION_GROUP_SLUG"); v == "" {
-		t.Fatal("VO_ROTATION_GROUP_SLUG must be set for acceptance tests")
-	}
 }
 
 func createTempConfigFile(content string, name string) (*os.File, error) {
@@ -129,9 +126,9 @@ func TestProviderConfigureFromNothing(t *testing.T) {
 	if configuration, err := configureTestProvider(testAccProviders["victorops_config_test"], raw); err != nil {
 		t.Fatalf("Expected metadata, got nil. err: %s", err.Error())
 	} else {
-		assert.Equal(t, "", configuration.APIId)
-		assert.Equal(t, "", configuration.APIKey)
-		assert.Equal(t, "https://api.victorops.com", configuration.BaseURL)
+		assert.Equal(t, os.Getenv("VO_API_ID"), configuration.APIId)
+		assert.Equal(t, os.Getenv("VO_API_KEY"), configuration.APIKey)
+		assert.Equal(t, os.Getenv("VO_BASE_URL"), configuration.BaseURL)
 	}
 }
 
@@ -155,9 +152,4 @@ func TestProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
-}
-
-// TODO: Set-up the client connection to test-org for initiating Acceptance tests
-func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
 }
