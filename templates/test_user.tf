@@ -6,4 +6,3 @@ resource "victorops_user" "test_user" {
   is_admin         = true
   replacement_user = "{{.Replacement}}"
 }
-
