@@ -16,10 +16,10 @@ sweep:
 	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
+	go test $(TEST) $(TESTARGS) -short -timeout=120s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
+	go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."

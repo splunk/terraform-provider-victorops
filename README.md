@@ -96,7 +96,7 @@ resource "victorops_escalation_policy" "high_severity" {
         slug = "rtg-wvvhXshpvaRdn7jM"
       }
     ]
-  }
+  } 
 }
 
 // Create routing keys to push alerts to our escalation policies
@@ -118,6 +118,14 @@ $ make test
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
+
+Acceptance tests require the following environment variables to be set.
+
+- VO_API_ID
+- VO_API_KEY
+- VO_BASE_URL
+-VO_REPLACEMENT_USERNAME
+    - the default username to replace all users when removed
 
 ```sh
 $ make testacc
