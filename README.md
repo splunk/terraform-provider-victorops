@@ -124,7 +124,7 @@ Acceptance tests require the following environment variables to be set.
 - VO_API_ID
 - VO_API_KEY
 - VO_BASE_URL
--VO_REPLACEMENT_USERNAME
+- VO_REPLACEMENT_USERNAME
     - the default username to replace all users when removed
 
 ```sh
