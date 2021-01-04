@@ -7,7 +7,7 @@ description: |-
 
 # victorops\_user
 
-A [user](https://portal.victorops.com/public/api-docs.html#/Users) is an individual within a VictorOps account.
+A [user](https://portal.victorops.com/public/api-docs.html#/Users) is an individual within a VictorOps account. Make sure `VO_REPLACEMENT_USERNAME` is set to the default username to replace all users when removed, otherwise deletion will fail.
 
 ## Example Usage
 
@@ -26,7 +26,7 @@ resource "victorops_user" "user1" {
 
 The following arguments are supported:
 
-* `frist_name` - (Required) The first name of the user.
+* `first_name` - (Required) The first name of the user.
 * `last_name` - (Required) The last name of the user.
 * `user_name` - (Required) The username for this user.
 * `email` - (Required) The user's email address.
