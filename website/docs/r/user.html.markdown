@@ -7,7 +7,10 @@ description: |-
 
 # victorops\_user
 
-A [user](https://portal.victorops.com/public/api-docs.html#/Users) is an individual within a VictorOps account. Make sure `VO_REPLACEMENT_USERNAME` is set to the default username to replace all users when removed, otherwise deletion will fail.
+A [user](https://portal.victorops.com/public/api-docs.html#/Users) is an individual within a VictorOps account.
+
+Make sure the optional field 'replacement_user' is set to a default user_name to facilitate deleting users using TF. Alternatively, you can set the `VO_REPLACEMENT_USERNAME` env variable to the default username to replace all users when removed.
+ 
 
 ## Example Usage
 
@@ -19,7 +22,11 @@ resource "victorops_user" "user1" {
   user_name        = "JaneDoe"
   email            = "jdoe@victorops.com"
   is_admin         = true
+  replacement_user = "myDefaultVOUser" // optional field
 }
+
+// Specify the replacement_user field with the default user_name to replace users when deleting them using TF
+
 ```
 
 ## Argument Reference

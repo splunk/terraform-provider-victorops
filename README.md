@@ -11,7 +11,7 @@ Requirements
 ------------
 
 - A VictorOps account that you want to manage alongwith API key and token.
-- [Terraform](https://www.terraform.io/downloads.html) 0.10.x
+- [Terraform](https://www.terraform.io/downloads.html) 0.10.x or higher
 - [Go](https://golang.org/doc/install) 1.14 (to build the provider plugin)
 
 Building The Provider
@@ -70,6 +70,8 @@ resource "victorops_user" "jdane_tf" {
   user_name        = "jdane"
   email            = "jdane51@victorops.com"
   is_admin         = true
+  replacement_user = "myDefaultVOUser" // optional
+  // Specify this with the default username to replace all users when deleting users using TF
 }
 
 // Create a new team
