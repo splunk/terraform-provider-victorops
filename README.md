@@ -69,7 +69,7 @@ resource "victorops_user" "jdane_tf" {
   last_name        = "Dane"
   user_name        = "jdane"
   email            = "jdane51@victorops.com"
-  is_admin         = true
+  is_admin         = false // deprecated - We no longer support creating admin users through TF/public APIs. The value in this field is ignored.
   replacement_user = "myDefaultVOUser" // optional
   // Specify this with the default username to replace all users when deleting users using TF
 }
