@@ -7,15 +7,15 @@ description: |-
 
 # VictorOps Provider
 
-[VictorOps](https://www.victorops.com) empowers teams by routing alerts to the right people for collaboration and fast issue resolution.
+[VictorOps](https://www.victorops.com) Empower teams by routing alerts to the right people for collaboration and fast issue resolution.
 
 Using this VictorOps Terraform provider, teams can automate VictorOps setup associated with an application.
 You can manage the following resources using this provider.
 1. User
 2. Team
 3. User-Team assignment
-4. Escalation Policy
-5. Routing Key
+4. Escalation Policy (delete and update operations dependent on routing keys not supported)
+5. Routing Key (delete and update operations not supported)
 
 Use the navigation to the left to read about the available resources.
 
@@ -49,7 +49,9 @@ resource "victorops_user" "user1" {
   last_name        = "Doe"
   user_name        = "JaneDoe"
   email            = "jdoe@victorops.com"
-  is_admin         = true
+  is_admin         = false // deprecated - We no longer support creating admin users through TF/public APIs. The value in this field is ignored.
+  replacement_user = "myDefaultVOUser" // optional
+  // Specify this with the default username to replace all users when deleting users using TF
 }
 ```
 

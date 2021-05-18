@@ -9,6 +9,8 @@ description: |-
 
 A [routing key](https://portal.victorops.com/public/api-docs.html#!/Routing32Keys/get_api_public_v1_org_routing_keys) in VictorOps is used to route incoming alerts to specific escalation policies.
 
+Note: Deletion of routing keys is not supported through the provider at this moment.
+
 ## Example Usage
 
 ```hcl

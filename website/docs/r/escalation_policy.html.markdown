@@ -9,7 +9,10 @@ description: |-
 
 [Team Escalation Policies](https://portal.victorops.com/public/api-docs.html#/Escalation32Policies) set who is actually on-call for a given team and are the link to utilize any rotations that have been created.
 
-Note: You need to fetch an existing Rotation Group Slug through the VO public API - [GET-Rotations](https://portal.victorops.com/public/api-docs.html#!/Rotations/get_api_public_v1_teams_team_rotations) for creating an escalation policy resource from Terraform
+Note:
+
+    - You need to fetch an existing Rotation Group Slug through the VO public API - [GET-Rotations](https://portal.victorops.com/public/api-docs.html#!/Rotations/get_api_public_v1_teams_team_rotations) for creating an escalation policy resource from Terraform
+    - Update/Delete operations on an escalation policy may fail if it involves deleting or updating a routing key (not supported in current state of the Terraform provider)
 
 ## Example Usage
 
