@@ -1,11 +1,15 @@
 package victorops
 
 import (
+	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/victorops/go-victorops/victorops"
+	"golang.org/x/time/rate"
 )
+
+// Create a global rate limiter instance.
+var limiter = rate.NewLimiter(2, 1) // 2 tokens per second, with a burst size of 1
 
 func resourceRoutingKey() *schema.Resource {
 	return &schema.Resource{
@@ -47,7 +51,12 @@ func resourceRoutingKeyCreate(d *schema.ResourceData, m interface{}) error {
 		Targets:    targets,
 	}
 
-	// Make the request
+	// Wait for the rate limiter before making the request
+	err := limiter.Wait(context.Background())
+	if err != nil {
+		return err
+	}
+
 	newRoutingKey, requestDetails, err := config.VictorOpsClient.CreateRoutingKey(routingKey)
 	if err != nil {
 		return err
@@ -64,6 +73,12 @@ func resourceRoutingKeyCreate(d *schema.ResourceData, m interface{}) error {
 func resourceRoutingKeyRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(Config)
 
+	// Wait for the rate limiter before making the request
+	err := limiter.Wait(context.Background())
+	if err != nil {
+		return err
+	}
+
 	rk, _, err := config.VictorOpsClient.GetRoutingKey(d.Get("name").(string))
 	if err != nil {
 		return err
@@ -73,8 +88,6 @@ func resourceRoutingKeyRead(d *schema.ResourceData, m interface{}) error {
 		d.SetId("")
 	} else {
 		d.SetId(rk.RoutingKey)
-
-		// Convert the response targets to an array of strings that can be compared
 		targets := []string{}
 		for _, target := range rk.Targets {
 			targets = append(targets, target.PolicySlug)
