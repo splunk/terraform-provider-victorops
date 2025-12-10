@@ -2,10 +2,12 @@ package victorops
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccTeamCreate(t *testing.T) {
@@ -19,7 +21,11 @@ func TestAccTeamCreate(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testTeamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +63,6 @@ func testAccTeamExists(resource string) resource.TestCheckFunc {
 }
 
 func testTeamDestroy(s *terraform.State) error {
-
 	apiClient := testAccProvider.Meta().(Config).VictorOpsClient
 
 	for _, rs := range s.RootModule().Resources {

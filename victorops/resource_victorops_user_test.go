@@ -2,14 +2,16 @@ package victorops
 
 import (
 	"fmt"
-	"github.com/bxcodec/faker/v3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/victorops/go-victorops/victorops"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/bxcodec/faker/v3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/victorops/go-victorops/victorops"
 )
 
 type UserData struct {
@@ -29,7 +31,11 @@ func TestAccUserCreate(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testAccUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +63,11 @@ func testAccUser_Update(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testAccUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,7 +142,6 @@ func testAccUserExists(resource string) resource.TestCheckFunc {
 }
 
 func testAccUserDestroy(s *terraform.State) error {
-
 	apiClient := testAccProvider.Meta().(Config).VictorOpsClient
 
 	for _, rs := range s.RootModule().Resources {

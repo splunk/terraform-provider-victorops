@@ -1,0 +1,76 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - run: go mod download
+      - run: go build -v .
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Run gofmt
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Please run 'gofmt -s -w .' to format your code"
+            gofmt -s -l .
+            exit 1
+          fi
+      - name: Run go vet
+        run: go vet ./...
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - run: go mod download
+      - run: go test -v -short -timeout 120s ./...
+
+  acceptance:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      VO_API_ID: ${{ secrets.VO_API_ID }}
+      VO_API_KEY: ${{ secrets.VO_API_KEY }}
+      VO_BASE_URL: ${{ secrets.VO_BASE_URL }}
+      VO_REPLACEMENT_USERNAME: ${{ secrets.VO_REPLACEMENT_USERNAME }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - run: go mod download
+      - name: Run acceptance tests
+        if: env.VO_API_ID != ''
+        run: go test -v -timeout 120m ./victorops/...
+

@@ -1,53 +1,65 @@
 package victorops
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/victorops/go-victorops/victorops"
 )
 
 func resourceEscalationPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEscalationPolicyCreate,
-		Read:   resourceEscalationPolicyRead,
-		Delete: resourceEscalationPolicyDelete,
+		CreateContext: resourceEscalationPolicyCreate,
+		ReadContext:   resourceEscalationPolicyRead,
+		DeleteContext: resourceEscalationPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceEscalationPolicyImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the escalation policy.",
 			},
 			"team_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The slug/ID of the team this policy belongs to.",
 			},
 			"ignore_custom_paging_policies": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  "false",
-				ForceNew: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Whether to ignore custom paging policies when this policy is triggered.",
 			},
 			"step": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeList,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The escalation steps for this policy.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
-							ForceNew: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							ForceNew:    true,
+							Description: "The timeout in minutes before escalating to the next step.",
 						},
 						"entries": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
+							Type:        schema.TypeList,
+							Required:    true,
+							ForceNew:    true,
+							Description: "The entries (targets) for this escalation step.",
 							Elem: &schema.Schema{
 								Type: schema.TypeMap,
 								Elem: &schema.Schema{
@@ -69,18 +81,17 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 	epsList := []victorops.EscalationPolicySteps{}
 	steps := d.Get("step").([]interface{})
 
-	// Crawl through each of the steps and add them to the escalation policy step list
 	for i := range steps {
 		step := steps[i].(map[string]interface{})
 		entryList := []victorops.EscalationPolicyStepEntry{}
 
-		// Crawl through all of the entries in this step and add them to the entries list
 		entries := step["entries"].([]interface{})
-		for i := range entries {
-			e := entries[i].(map[string]interface{})
+		for j := range entries {
+			e := entries[j].(map[string]interface{})
 			t := e["type"].(string)
 
-			if t == "user" {
+			switch t {
+			case "user":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "user",
 					User: map[string]string{
@@ -88,7 +99,7 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
-			} else if t == "email" {
+			case "email":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "email",
 					Email: map[string]string{
@@ -96,7 +107,7 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
-			} else if t == "rotationGroup" {
+			case "rotationGroup":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "rotation_group",
 					RotationGroup: map[string]string{
@@ -104,7 +115,7 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
-			} else if t == "rotationGroupNext" {
+			case "rotationGroupNext":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "rotation_group_next",
 					RotationGroup: map[string]string{
@@ -112,7 +123,7 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
-			} else if t == "rotationGroupPrevious" {
+			case "rotationGroupPrevious":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "rotation_group_previous",
 					RotationGroup: map[string]string{
@@ -120,7 +131,7 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
-			} else if t == "webhook" {
+			case "webhook":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "webhook",
 					Webhook: map[string]string{
@@ -128,7 +139,7 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 					},
 				}
 				entryList = append(entryList, entry)
-			} else if t == "targetPolicy" {
+			case "targetPolicy":
 				entry := victorops.EscalationPolicyStepEntry{
 					ExecutionType: "policy_routing",
 					TargetPolicy: map[string]string{
@@ -155,74 +166,100 @@ func generateEscalationPolicyFromResourceData(d *schema.ResourceData) (*victorop
 	}, nil
 }
 
-func resourceEscalationPolicyCreate(d *schema.ResourceData, m interface{}) error {
+func resourceEscalationPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	config := m.(Config)
 
-	// Create the user object for the request
 	ep, err := generateEscalationPolicyFromResourceData(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Make the request
+	// Wait for rate limiter before making API request
+	if err := WaitForRateLimitWithContext(ctx); err != nil {
+		return diag.FromErr(err)
+	}
+
 	newEscalationPolicy, requestDetails, err := config.VictorOpsClient.CreateEscalationPolicy(ep)
 	if err != nil {
-		log.Printf(requestDetails.RequestBody)
-		log.Printf(requestDetails.ResponseBody)
-		return err
+		log.Printf("[ERROR] Request body: %s", requestDetails.RequestBody)
+		log.Printf("[ERROR] Response body: %s", requestDetails.ResponseBody)
+		return diag.FromErr(err)
 	}
 
 	if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to create escaltion policy (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diag.Errorf("failed to create escalation policy (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
 	}
 
 	d.SetId(newEscalationPolicy.ID)
-	return resourceEscalationPolicyRead(d, m)
+	return resourceEscalationPolicyRead(ctx, d, m)
 }
 
-// TODO: Implement Read Escalation Policy w/ indepth comparison
-func resourceEscalationPolicyRead(d *schema.ResourceData, m interface{}) error {
+func resourceEscalationPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	config := m.(Config)
 
-	// Make the request
+	// Wait for rate limiter before making API request
+	if err := WaitForRateLimitWithContext(ctx); err != nil {
+		return diag.FromErr(err)
+	}
+
 	escalationPolicy, requestDetails, err := config.VictorOpsClient.GetEscalationPolicy(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if requestDetails.StatusCode == 404 {
 		d.SetId("")
-		return nil
-	} else if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to get escaltion policy (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diags
+	}
+	if requestDetails.StatusCode != 200 {
+		return diag.Errorf("failed to get escalation policy (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
 	}
 
-	// Update our state with the refreshed state from the API
-	err = d.Set("name", escalationPolicy.Name)
-	if err != nil {
-		return err
+	if err := d.Set("name", escalationPolicy.Name); err != nil {
+		return diag.FromErr(err)
 	}
 
-	err = d.Set("ignore_custom_paging_policies", escalationPolicy.IgnoreCustomPagingPolicies)
-	if err != nil {
-		return err
+	if err := d.Set("ignore_custom_paging_policies", escalationPolicy.IgnoreCustomPagingPolicies); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEscalationPolicyDelete(d *schema.ResourceData, m interface{}) error {
+func resourceEscalationPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	config := m.(Config)
 
-	// Make the request
+	// Wait for rate limiter before making API request
+	if err := WaitForRateLimitWithContext(ctx); err != nil {
+		return diag.FromErr(err)
+	}
+
 	requestDetails, err := config.VictorOpsClient.DeleteEscalationPolicy(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to delete escalation policy (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diag.Errorf("failed to delete escalation policy (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
 	}
 
-	return nil
+	d.SetId("")
+	return diags
+}
+
+func resourceEscalationPolicyImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	idAttr := strings.SplitN(d.Id(), "/", 2)
+	if len(idAttr) != 2 {
+		return nil, fmt.Errorf("invalid id %q specified, should be in format \"team_id/policy_id\" for import", d.Id())
+	}
+
+	teamID := idAttr[0]
+	policyID := idAttr[1]
+
+	d.Set("team_id", teamID)
+	d.SetId(policyID)
+
+	return []*schema.ResourceData{d}, nil
 }

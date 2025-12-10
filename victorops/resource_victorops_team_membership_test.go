@@ -2,13 +2,15 @@ package victorops
 
 import (
 	"fmt"
-	"github.com/bxcodec/faker/v3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/victorops/go-victorops/victorops"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/bxcodec/faker/v3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/victorops/go-victorops/victorops"
 )
 
 type MembershipData struct {
@@ -28,7 +30,11 @@ func TestAccCreateTeamMembership(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testMembershipDestroy,
 		Steps: []resource.TestStep{
 			{

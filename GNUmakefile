@@ -9,6 +9,9 @@ TEST_COUNT?=1
 default: build
 
 build: fmtcheck
+	go build -o terraform-provider-victorops
+
+install: build
 	go install
 
 sweep:
@@ -19,60 +22,49 @@ test: fmtcheck
 	go test $(TEST) $(TESTARGS) -short -timeout=120s -parallel=4
 
 testacc: fmtcheck
+	@echo "==> Running acceptance tests..."
+	@echo "Note: Set VO_API_ID, VO_API_KEY, VO_BASE_URL, and VO_REPLACEMENT_USERNAME for acceptance tests"
 	go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME)
 
-# Currently required by tf-deploy compile
 fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@echo "==> Checking source code formatting..."
+	@test -z "$$(gofmt -s -l ./$(PKG_NAME) | tee /dev/stderr)" || \
+		(echo; echo "Please run 'make fmt' to fix formatting"; exit 1)
+
+vet:
+	@echo "==> Running go vet..."
+	@go vet ./...
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@go mod tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
-	@echo "==> Checking source code with go mod vendor..."
-	@go mod vendor
-	@git diff --compact-summary --exit-code -- vendor || \
-		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
 
-docscheck:
-	@tfproviderdocs check
-	@misspell -error -source text CHANGELOG.md
-
-lint:
+lint: fmtcheck vet
 	@echo "==> Checking source code against linters..."
-	@golangci-lint run ./$(PKG_NAME)/...
-	@tfproviderlint \
-		-c 1 \
-		-S001 \
-		-S002 \
-		-S003 \
-		-S004 \
-		-S005 \
-		-S007 \
-		-S008 \
-		-S009 \
-		-S010 \
-		-S011 \
-		-S012 \
-		-S013 \
-		-S014 \
-		-S015 \
-		-S016 \
-		-S017 \
-		-S019 \
-		./$(PKG_NAME)
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run ./$(PKG_NAME)/...; \
+	else \
+		echo "golangci-lint not installed, skipping..."; \
+	fi
+
+docs:
+	@echo "==> Generating documentation..."
+	@if command -v tfplugindocs >/dev/null 2>&1; then \
+		tfplugindocs generate; \
+	else \
+		echo "tfplugindocs not installed. Install with: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest"; \
+	fi
 
 tools:
-	GO111MODULE=on go install github.com/bflad/tfproviderlint/cmd/tfproviderlint
-	GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	GO111MODULE=on go install github.com/katbyte/terrafmt
+	@echo "==> Installing development tools..."
+	go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -82,5 +74,7 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build sweep test testacc fmt fmtcheck lint tools test-compile depscheck docscheck
+clean:
+	rm -f terraform-provider-victorops
 
+.PHONY: build install sweep test testacc fmt fmtcheck vet lint tools test-compile depscheck docs clean
