@@ -1,21 +1,23 @@
 package victorops
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/victorops/go-victorops/victorops"
 )
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		CreateContext: resourceUserCreate,
+		ReadContext:   resourceUserRead,
+		UpdateContext: resourceUserUpdate,
+		DeleteContext: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,7 +65,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	config := m.(Config)
 	username := d.Get("user_name").(string)
 
@@ -78,98 +80,80 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Make the request
-	newUser, respDetails, err := config.VictorOpsClient.CreateUser(user)
+	newUser, respDetails, err := config.VictorOpsClient.CreateUser(ctx, user)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if respDetails.StatusCode != 200 {
 		d.SetId("")
-		return fmt.Errorf("failed to create user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
+		return diag.Errorf("failed to create user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
 	}
 
 	d.SetId(newUser.Username)
 
-	return resourceUserRead(d, m)
+	return resourceUserRead(ctx, d, m)
 }
 
-func resourceUserRead(d *schema.ResourceData, m interface{}) error {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	config := m.(Config)
 	username := d.Id()
 
 	// Make the request
-	user, respDetails, err := config.VictorOpsClient.GetUser(username)
+	user, respDetails, err := config.VictorOpsClient.GetUser(ctx, username)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// If the user no longer exists then tell terraform that
 	if respDetails.StatusCode == 404 {
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if respDetails.StatusCode != 200 {
 		d.SetId("")
-		return fmt.Errorf("error reading user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
+		return diag.Errorf("error reading user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
 	}
 
-	err = d.Set("first_name", user.FirstName)
-	if err != nil {
-		return err
+	if err := d.Set("first_name", user.FirstName); err != nil {
+		return diag.FromErr(err)
 	}
-	err = d.Set("last_name", user.LastName)
-	if err != nil {
-		return err
+	if err := d.Set("last_name", user.LastName); err != nil {
+		return diag.FromErr(err)
 	}
-	err = d.Set("email", user.Email)
-	if err != nil {
-		return err
+	if err := d.Set("email", user.Email); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Also grab the default email contact id, for use in paging policies
-	defaultEmailContactID, requestDetails, err := config.VictorOpsClient.GetUserDefaultEmailContactID(username)
+	defaultEmailContactID, requestDetails, err := config.VictorOpsClient.GetUserDefaultEmailContactID(ctx, username)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("faile to get default email contact id for user (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diag.Errorf("failed to get default email contact id for user (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
 	}
 
-	err = d.Set("default_email_contact_id", defaultEmailContactID)
-	if err != nil {
-		return err
+	if err := d.Set("default_email_contact_id", defaultEmailContactID); err != nil {
+		return diag.FromErr(err)
 	}
 
-	err = d.Set("user_name", user.Username)
-	if err != nil {
-		return err
+	if err := d.Set("user_name", user.Username); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(user.Username)
-	err = d.Set("first_name", user.FirstName)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("last_name", user.LastName)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("email", user.Email)
-	if err != nil {
-		return err
-	}
 
 	// TODO: is_admin is not returned via the get API which means we cannot detect changes.
 	// this is a bug that will affect imported users. Not sure how best to handle this yet
 
-	return nil
+	return diags
 }
 
-func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	config := m.(Config)
 
 	// Create the user object for the request
@@ -182,37 +166,38 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Make the request
-	user, respDetails, err := config.VictorOpsClient.UpdateUser(user)
+	user, respDetails, err := config.VictorOpsClient.UpdateUser(ctx, user)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if respDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to update user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
+		return diag.Errorf("failed to update user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
 	}
 
 	d.SetId(user.Username)
-	return resourceUserRead(d, m)
+	return resourceUserRead(ctx, d, m)
 }
 
-func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	config := m.(Config)
 	replacementUser := d.Get("replacement_user").(string)
 
 	if replacementUser == "" {
-		return errors.New("replacement_user must be specified before a user can be deleted")
+		return diag.FromErr(errors.New("replacement_user must be specified before a user can be deleted"))
 	}
 
 	// Make the request
-	respDetails, err := config.VictorOpsClient.DeleteUser(d.Id(), replacementUser)
+	respDetails, err := config.VictorOpsClient.DeleteUser(ctx, d.Id(), replacementUser)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if respDetails.StatusCode != 200 {
 		d.SetId("")
-		return fmt.Errorf("failed to delete user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody)
+		return diag.FromErr(fmt.Errorf("failed to delete user (%d): %s", respDetails.StatusCode, respDetails.ResponseBody))
 	}
 
-	return nil
+	return diags
 }

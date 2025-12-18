@@ -1,11 +1,14 @@
 package victorops
 
 import (
+	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccTeamCreate(t *testing.T) {
@@ -19,7 +22,11 @@ func TestAccTeamCreate(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testTeamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +55,7 @@ func testAccTeamExists(resource string) resource.TestCheckFunc {
 		}
 		teamSlug := rs.Primary.ID
 		apiClient := testAccProvider.Meta().(Config).VictorOpsClient
-		_, _, err := apiClient.GetTeam(teamSlug)
+		_, _, err := apiClient.GetTeam(context.Background(), teamSlug)
 		if err != nil {
 			return fmt.Errorf("error fetching item with resource %s. %s", resource, err)
 		}
@@ -57,7 +64,6 @@ func testAccTeamExists(resource string) resource.TestCheckFunc {
 }
 
 func testTeamDestroy(s *terraform.State) error {
-
 	apiClient := testAccProvider.Meta().(Config).VictorOpsClient
 
 	for _, rs := range s.RootModule().Resources {
@@ -65,7 +71,7 @@ func testTeamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, response, _ := apiClient.GetTeam(rs.Primary.ID)
+		_, response, _ := apiClient.GetTeam(context.Background(), rs.Primary.ID)
 		notFoundErr := "{\"error\":\"No team 'team-.+' found\"}"
 		expectedErr := regexp.MustCompile(notFoundErr)
 		if !expectedErr.Match([]byte(response.ResponseBody)) {

@@ -1,22 +1,24 @@
 package victorops
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/victorops/go-victorops/victorops"
 )
 
 func resourceContact() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceContactCreate,
-		Read:   resourceContactRead,
-		Delete: resourceContactDelete,
+		CreateContext: resourceContactCreate,
+		ReadContext:   resourceContactRead,
+		DeleteContext: resourceContactDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceContactImport,
+			StateContext: resourceContactImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,7 +65,7 @@ func typeToContactType(sType string) victorops.ContactType {
 	}
 }
 
-func resourceContactCreate(d *schema.ResourceData, m interface{}) error {
+func resourceContactCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	config := m.(Config)
 	username := d.Get("user_name").(string)
 	contactType := d.Get("type").(string)
@@ -80,23 +82,21 @@ func resourceContactCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Make the request
-	newContact, requestDetails, err := config.VictorOpsClient.CreateContact(username, contact)
+	newContact, requestDetails, err := config.VictorOpsClient.CreateContact(ctx, username, contact)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to create contact (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diag.Errorf("failed to create contact (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
 	}
 
-	err = d.Set("internal_id", newContact.ID)
-	if err != nil {
-		return err
+	if err := d.Set("internal_id", newContact.ID); err != nil {
+		return diag.FromErr(err)
 	}
 
-	err = d.Set("computed_value", newContact.Value)
-	if err != nil {
-		return err
+	if err := d.Set("computed_value", newContact.Value); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newContact.ExtID)
@@ -104,69 +104,68 @@ func resourceContactCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceContactRead(d *schema.ResourceData, m interface{}) error {
+func resourceContactRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	config := m.(Config)
 	username := d.Get("user_name").(string)
 	contactID := d.Id()
 	contactType := typeToContactType(d.Get("type").(string))
 
 	// Make the request
-	newContact, requestDetails, err := config.VictorOpsClient.GetContact(username, contactID, contactType)
+	newContact, requestDetails, err := config.VictorOpsClient.GetContact(ctx, username, contactID, contactType)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// If the contact no longer exists then tell terraform that
 	if requestDetails.StatusCode == 404 {
 		d.SetId("")
-		return nil
+		return diags
 	} else if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to get contact (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diag.Errorf("failed to get contact (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
 	}
 
 	// We compare the computed value against the saved state instead of the user supplied value
-	// as the cpmputed value is the value as formatted by the victorops API on creation.
-	err = d.Set("computed_value", newContact.Value)
-	if err != nil {
-		return err
+	// as the computed value is the value as formatted by the victorops API on creation.
+	if err := d.Set("computed_value", newContact.Value); err != nil {
+		return diag.FromErr(err)
 	}
 
-	err = d.Set("label", newContact.Label)
-	if err != nil {
-		return err
+	if err := d.Set("label", newContact.Label); err != nil {
+		return diag.FromErr(err)
 	}
 
-	err = d.Set("internal_id", newContact.ID)
-	if err != nil {
-		return err
+	if err := d.Set("internal_id", newContact.ID); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceContactDelete(d *schema.ResourceData, m interface{}) error {
+func resourceContactDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	config := m.(Config)
 	username := d.Get("user_name").(string)
 	contactID := d.Id()
 	contactType := typeToContactType(d.Get("type").(string))
 
 	// Make the request
-	requestDetails, err := config.VictorOpsClient.DeleteContact(username, contactID, contactType)
+	requestDetails, err := config.VictorOpsClient.DeleteContact(ctx, username, contactID, contactType)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if requestDetails.StatusCode != 200 {
-		return fmt.Errorf("failed to get delete contact (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody)
+		return diag.FromErr(fmt.Errorf("failed to delete contact (%d): %s", requestDetails.StatusCode, requestDetails.ResponseBody))
 	}
 
-	return nil
+	return diags
 }
 
 // Because we are unable to read a contact from the victorops public API given only the ID of that contact,
 // this method takes in a / delimited string that contains all of the information we need to read in a contact
 // and triggers the read method
-func resourceContactImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceContactImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	// split the id so we can lookup
 	idAttr := strings.SplitN(d.Id(), "/", 3)
 	var username string
@@ -184,11 +183,11 @@ func resourceContactImport(d *schema.ResourceData, m interface{}) ([]*schema.Res
 	d.Set("type", contactType)
 	d.SetId(contactID)
 
-	resourceContactRead(d, m)
+	resourceContactRead(ctx, d, m)
 
 	// Check that the ID was not re-set to an empty string. If it was, then the contact was not found
 	if d.Id() == "" {
-		return nil, fmt.Errorf("contact %s not found.", idAttr)
+		return nil, fmt.Errorf("contact %s not found", idAttr)
 	}
 
 	// In a normal read we do not set "value" as we can't compare it to the value returned from the API

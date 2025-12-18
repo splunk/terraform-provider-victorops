@@ -1,15 +1,18 @@
 package victorops
 
 import (
+	"context"
 	"fmt"
-	"github.com/bxcodec/faker/v3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/victorops/go-victorops/victorops"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/bxcodec/faker/v3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/victorops/go-victorops/victorops"
 )
 
 type UserData struct {
@@ -29,7 +32,11 @@ func TestAccUserCreate(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testAccUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +64,11 @@ func testAccUser_Update(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProviders,
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"victorops": func() (*schema.Provider, error) {
+				return testAccProvider, nil
+			},
+		},
 		CheckDestroy: testAccUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +134,7 @@ func testAccUserExists(resource string) resource.TestCheckFunc {
 		}
 		username := rs.Primary.ID
 		apiClient := testAccProvider.Meta().(Config).VictorOpsClient
-		_, _, err := apiClient.GetUser(username)
+		_, _, err := apiClient.GetUser(context.Background(), username)
 		if err != nil {
 			return fmt.Errorf("error fetching item with resource %s. %s", resource, err)
 		}
@@ -132,7 +143,6 @@ func testAccUserExists(resource string) resource.TestCheckFunc {
 }
 
 func testAccUserDestroy(s *terraform.State) error {
-
 	apiClient := testAccProvider.Meta().(Config).VictorOpsClient
 
 	for _, rs := range s.RootModule().Resources {
@@ -140,7 +150,7 @@ func testAccUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, response, _ := apiClient.GetUser(rs.Primary.ID)
+		_, response, _ := apiClient.GetUser(context.Background(), rs.Primary.ID)
 		notFoundErr := "None found for username:*"
 		expectedErr := regexp.MustCompile(notFoundErr)
 		if !expectedErr.Match([]byte(response.ResponseBody)) {
