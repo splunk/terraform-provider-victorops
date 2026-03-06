@@ -14,6 +14,9 @@ func resourceEscalationPolicy() *schema.Resource {
 		Create: resourceEscalationPolicyCreate,
 		Read:   resourceEscalationPolicyRead,
 		Delete: resourceEscalationPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

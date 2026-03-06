@@ -3,6 +3,7 @@ package victorops
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/victorops/go-victorops/victorops"
@@ -14,6 +15,9 @@ func resourceTeamMembership() *schema.Resource {
 		Read:   resourceTeamMembershipRead,
 		Update: resourceTeamMembershipUpdate,
 		Delete: resourceTeamMembershipDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceTeamMembershipImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"user_name": {
@@ -103,4 +107,35 @@ func resourceTeamMembershipDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return nil
+}
+
+// resourceTeamMembershipImport imports an existing team membership.
+// The import ID must be in the format "team_slug/username".
+func resourceTeamMembershipImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.SplitN(d.Id(), "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return nil, fmt.Errorf("invalid import ID %q: expected format \"team_slug/username\"", d.Id())
+	}
+
+	teamID := parts[0]
+	username := parts[1]
+
+	if err := d.Set("team_id", teamID); err != nil {
+		return nil, err
+	}
+	if err := d.Set("user_name", username); err != nil {
+		return nil, err
+	}
+
+	d.SetId(teamID + "_" + username)
+
+	if err := resourceTeamMembershipRead(d, m); err != nil {
+		return nil, err
+	}
+
+	if d.Id() == "" {
+		return nil, fmt.Errorf("team membership %s/%s not found", teamID, username)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
