@@ -34,4 +34,8 @@ The following attributes are exported:
 
 ## Import
 
-Import is not currently supported
+Teams can be imported using the team slug:
+
+```
+terraform import victorops_team.example team-abc123
+```
