@@ -1,6 +1,14 @@
 package victorops
 
-import "github.com/victorops/go-victorops/victorops"
+import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+
+	"github.com/victorops/go-victorops/victorops"
+)
 
 // Config options for the VO Client
 type Config struct {
@@ -8,6 +16,45 @@ type Config struct {
 	APIId           string
 	BaseURL         string
 	VictorOpsClient *victorops.Client
+}
+
+// APIResponse holds the status code and body of a raw API response.
+type APIResponse struct {
+	StatusCode   int
+	ResponseBody string
+}
+
+// makeAPICall is a lightweight helper for calling VictorOps API endpoints that are
+// not yet covered by the go-victorops SDK (e.g. PUT /v1/policies/{slug}).
+// It mirrors the same authentication headers used by the SDK internally.
+func (c Config) makeAPICall(method, endpoint string, body []byte) (*APIResponse, error) {
+	url := fmt.Sprintf("%s/api-public/%s", c.BaseURL, endpoint)
+
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("X-VO-Api-Id", c.APIId)
+	req.Header.Set("X-VO-Api-Key", c.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &APIResponse{
+		StatusCode:   resp.StatusCode,
+		ResponseBody: string(respBody),
+	}, nil
 }
 
 // Returns a list of all valid weekday strings

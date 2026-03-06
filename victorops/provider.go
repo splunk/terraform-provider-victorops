@@ -29,13 +29,21 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("VO_BASE_URL", "https://api.victorops.com"),
 			},
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"victorops_user":              dataSourceUser(),
+			"victorops_team":              dataSourceTeam(),
+			"victorops_escalation_policy": dataSourceEscalationPolicy(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
-			"victorops_user":              resourceUser(),
-			"victorops_team":              resourceTeam(),
-			"victorops_team_membership":   resourceTeamMembership(),
-			"victorops_contact":           resourceContact(),
-			"victorops_escalation_policy": resourceEscalationPolicy(),
-			"victorops_routing_key":       resourceRoutingKey(),
+			"victorops_user":               resourceUser(),
+			"victorops_team":               resourceTeam(),
+			"victorops_team_membership":    resourceTeamMembership(),
+			"victorops_contact":            resourceContact(),
+			"victorops_escalation_policy":  resourceEscalationPolicy(),
+			"victorops_routing_key":        resourceRoutingKey(),
+			"victorops_scheduled_override": resourceScheduledOverride(),
+			"victorops_paging_policy":      resourcePagingPolicy(),
+			"victorops_rotation":           resourceRotation(),
 		},
 	}
 
