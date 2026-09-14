@@ -36,6 +36,7 @@ func Provider() terraform.ResourceProvider {
 			"victorops_contact":           resourceContact(),
 			"victorops_escalation_policy": resourceEscalationPolicy(),
 			"victorops_routing_key":       resourceRoutingKey(),
+			"victorops_rotation":          resourceRotation(),
 		},
 	}
 
@@ -62,6 +63,7 @@ func providerConfigure(data *schema.ResourceData, terraformVersion string) (inte
 		APIKey:          data.Get("api_key").(string),
 		BaseURL:         data.Get("base_url").(string),
 		VictorOpsClient: victoropsClient,
+		RotationClient:  newRotationClient(data.Get("api_id").(string), data.Get("api_key").(string), data.Get("base_url").(string)),
 	}
 
 	return config, nil

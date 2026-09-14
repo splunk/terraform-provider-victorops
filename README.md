@@ -45,6 +45,7 @@ Using this VictorOps Terraform provider, you can manage the following VictorOps 
 3. User-Team assignment
 4. Escalation Policy
 5. Routing Key
+6. Rotation
 
 Usage
 ------------
@@ -85,8 +86,32 @@ resource "victorops_team_membership" "jdane_membership" {
   user_name        = victorops_user.jdane_tf.user_name
 }
 
-// Create escalation policies for existing VO rotation (created using portal)
-// Note: You need to fetch an existing Rotation Group Slug for using the Escalation Policy
+// Create an on-call rotation with one standard shift
+resource "victorops_rotation" "primary" {
+  team_id = victorops_team.team_vikings.id
+  name    = "Primary"
+
+  shift {
+    name     = "Primary 24x7"
+    timezone = "America/Toronto"
+    start    = 1767225600000 // Epoch milliseconds
+    duration = 7
+    type     = "std"
+    members  = [victorops_user.jdane_tf.user_name]
+
+    mask {
+      days = ["su", "m", "t", "w", "th", "f", "sa"]
+      time {
+        start_hour   = 0
+        start_minute = 0
+        end_hour     = 23
+        end_minute   = 59
+      }
+    }
+  }
+}
+
+// Create an escalation policy for the Terraform-managed rotation
 resource "victorops_escalation_policy" "high_severity" {
   name    = "High Severity"
   team_id = victorops_team.team_vikings.id
@@ -95,7 +120,7 @@ resource "victorops_escalation_policy" "high_severity" {
     entries = [
       {
         type = "rotationGroup"
-        slug = "rtg-wvvhXshpvaRdn7jM"
+        slug = victorops_rotation.primary.slug
       }
     ]
   } 

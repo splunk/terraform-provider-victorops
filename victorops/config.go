@@ -8,6 +8,7 @@ type Config struct {
 	APIId           string
 	BaseURL         string
 	VictorOpsClient *victorops.Client
+	RotationClient  *rotationClient
 }
 
 // Returns a list of all valid weekday strings
